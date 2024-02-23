@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -A Research_Project-MRC164847 # research project to submit under.
+#SBATCH -A Research_Project1 # research project to submit under.
 #SBATCH --job-name=exceRpt  # job name
 #SBATCH --output=exceRpt.%j.log  # output
 #SBATCH --export=ALL # export all environment variables to the batch job.
@@ -16,9 +16,9 @@ echo Job started on:
 date -u
 echo -e '\n'
 
-InputDir=/lustre/projects/Research_Project-191391/Project_10398/V0182/14.2_4bp_trimmed
-OutDir=/lustre/projects/Research_Project-191391/Morteza/exceRpt/Project.10398
-RefDir=/lustre/projects/Research_Project-191391/Morteza/exceRpt/hg19
+InputDir=./miRNASeq_trimmed
+OutDir=./exceRpt/results
+RefDir=./exceRpt/hg19
 is_paired_end=no #no or yes
 
 ###################################################################################################
