@@ -1,8 +1,5 @@
 args<-commandArgs(T)
-#args <- c("~/data/exceRpt/OutData" , "~/data/exceRpt" , "NIH_Brain") 
-#print(args[1])
-#print(args[2])
-#print(args[3])
+
 InDir <- args[1]
 OutDir <- args[2]
 Prefix <- args[3]
@@ -106,21 +103,6 @@ write.csv(piRNA_count,file=paste0(OutDir,"/",Prefix,"_piRNAS.csv"))
 write.csv(miRNA_count,file=paste0(OutDir,"/",Prefix,"_miRNAS.csv"))
 
 print("Done")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
