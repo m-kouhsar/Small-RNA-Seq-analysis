@@ -1,12 +1,12 @@
-setwd("C:/Users/mk693/OneDrive - University of Exeter/Desktop/2021/NIH/Data/miRNA-Seq")
 library(stringr)
 library(qpcR)
 library(ggplot2)
 #library(reshape)
 
-InDir <- "10397_readlength/"
-OutPrefix <- "10397"
-splt <- 10
+args <- commandArgs(T)
+InDir <- args[1]
+OutPrefix <- args[2]
+splt <- args[3]
 
 file_names <- list.files(path = InDir,pattern = ".txt",recursive = F,full.names = F)
 
