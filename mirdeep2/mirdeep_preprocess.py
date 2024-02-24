@@ -6,15 +6,14 @@ Created on Mon Nov  8 09:20:34 2021
 """
 
 ######### input parameters ###################
-CurWD='C:/Users/mk693/OneDrive - University of Exeter/Desktop/2021/NIH/Data/miRNA-Seq/'
+CurWD='.'
 species='hsa'
-input_file='mirbase ref/mature1.fa'
+input_file='./mirbase_ref/mature1.fa'
 
 
 import os
 
-# Get the directory of
-# script
+# Get the directory of script
 #script = os.path.realpath(__file__)
 #print("SCript path:", script)
 
