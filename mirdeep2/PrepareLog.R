@@ -1,5 +1,5 @@
 library(stringr)
-setwd("C:/Users/mk693/OneDrive - University of Exeter/Desktop/2021/NIH/Data/miRNA-Seq")
+setwd(".")
 log_data <- read.delim(file = "10397/10397_mideep2.log",check.names = F)
 config_data <- read.delim(file = "10397/project_10397_config.txt",check.names = F,header = F)
 
