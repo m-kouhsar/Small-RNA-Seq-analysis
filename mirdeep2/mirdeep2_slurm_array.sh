@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -A Research_Project-MRC164847 # research project to submit under.
+#SBATCH -A Research_Project1 # research project to submit under.
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -D . # set working directory to .
 #SBATCH -p mrcq
@@ -12,12 +12,12 @@
 #########################################################################################
 #########################################################################################
 
-out_dir=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/Project_10986.mirdeep2.results
-fastq_dir=/lustre/projects/Research_Project-191391/Project_10986/V0327/14.1_fastp_adapter_trimmed
-genome_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hg38.fa
-bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
-hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.fa.fix
-mature_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/mature1.fa.fix
+out_dir=./mirdeep2.results
+fastq_dir=./miRNASeq.fastq
+genome_file=./mirdeep2/hg38.fa
+bowtie_index_pref=./mirdeep2/bowtie-index/hg38.fa
+hairpin_file=./mirdeep2/hairpin1.fa.fix
+mature_file=./mirdeep2/mature1.fa.fix
 
 is_paired_end=true
 out_prefix=Project_10986
