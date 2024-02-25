@@ -1,12 +1,11 @@
 args<-commandArgs(T)
 
-InDir <- args[1]
-OutDir <- args[2]
-Prefix <- args[3]
+Salmon.Results.Dir <- args[1]
+OutPrefix <- args[2]
 
 library(stringr)
 
-dirs <- list.dirs(path =InDir,recursive = F)
+dirs <- list.dirs(path =Salmon.Results.Dir,recursive = F)
 
 tRNA <- list()
 piRNA <- list()
@@ -98,12 +97,8 @@ for (i in 1:length(dirs)){
   miRNA_count[index,i] <- mir$uniqueReadCount
 }
 
-write.csv(tRNA_count,file=paste0(OutDir,"/",Prefix,"_tRNAS.csv"))
-write.csv(piRNA_count,file=paste0(OutDir,"/",Prefix,"_piRNAS.csv"))
-write.csv(miRNA_count,file=paste0(OutDir,"/",Prefix,"_miRNAS.csv"))
+write.csv(tRNA_count,file=paste0(OutPrefix,"_tRNAS.csv"))
+write.csv(piRNA_count,file=paste0(OutPrefix,"_piRNAS.csv"))
+write.csv(miRNA_count,file=paste0(OutPrefix,"_miRNAS.csv"))
 
 print("Done")
-
-
-
-
