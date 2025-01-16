@@ -3,29 +3,29 @@
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -D . # set working directory to .
 #SBATCH -p mrcq
-#SBATCH --time=50:00:00 # Maximum wall time for the job
+#SBATCH --time=10:00:00 # Maximum wall time for the job
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors.
 #SBATCH --mail-type=END # send email at job completion
 #SBATCH --mail-user=m.kouhsar@exeter.ac.uk # email address
-#SBATCH --array=0-9
+#SBATCH --array=0-19
 #########################################################################################
 #########################################################################################
 
-out_dir=./mirdeep2.results
-fastq_dir=./miRNASeq.fastq
-genome_file=./mirdeep2/hg38.fa
-bowtie_index_pref=./mirdeep2/bowtie-index/hg38.fa
-hairpin_file=./mirdeep2/hairpin1.fa.fix
-mature_file=./mirdeep2/mature1.fa.fix
+out_dir=/lustre/projects/Research_Project-191391/Morteza/Ehsan/ROSMAP_miRNA/Results
+fastq_dir=/lustre/projects/Research_Project-191391/Morteza/Ehsan/ROSMAP_miRNA/Raw_trimmed
+genome_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hg38.fa
+bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
+hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.fa.fix
+mature_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/mature1.fa.fix
 
-is_paired_end=true
-out_prefix=Project_10986
+is_paired_end=n      #y/n
+out_prefix=ROSMAP
 
 #######################################################################################
 #######################################################################################
 out_prefix1=${out_dir}/${out_prefix}.${SLURM_ARRAY_TASK_ID}
-fastq_files=(${fastq_dir}/*R1*.fastq.gz)
+fastq_files=(${fastq_dir}/*.fastq.gz)
 
 Num_samp=${#fastq_files[@]}
 window_size=$(( Num_samp / SLURM_ARRAY_TASK_COUNT + 1 ))
@@ -44,12 +44,15 @@ echo Fastq files directory: $fastq_dir
 echo Genome file for mirdeep2: $genome_file
 echo Output file prefix: $out_prefix
 echo Number of samples: $Num_samp
+echo Start array index: $SLURM_ARRAY_TASK_COUNT
+echo End array index : $SLURM_ARRAY_TASK_COUNT
 echo numer of arrays: $SLURM_ARRAY_TASK_COUNT
+echo current array index: $SLURM_ARRAY_TASK_ID
 
 echo "##########################################################################"
 echo -e '\n'
 
-if [ "$is_paired_end" = true ] 
+if [ "$is_paired_end" = y ] 
 #step 1: merging paired end data
 then
 	mkdir -p ${out_prefix1}.merged.fastq
@@ -63,7 +66,7 @@ then
 		then
 			echo ${out_prefix1}.merged.fastq/$name1
 		else
-			echo Merging $(basename $i1) and $(basename $i2) files and saving the result in ${out_prefix}.${SLURM_ARRAY_TASK_ID}.merged.fastq/$name
+			echo Merging $(basename $i1) and $(basename $i2) files and saving the result to ${out_prefix}.${SLURM_ARRAY_TASK_ID}.merged.fastq/$name
 			cat $i1 $i2  > ${out_prefix1}.merged.fastq/$name
 			echo Unzipping ${out_prefix}.${SLURM_ARRAY_TASK_ID}.merged.fastq/$name
 			gunzip ${out_prefix1}.merged.fastq/$name
@@ -73,7 +76,7 @@ then
 	fastq_files1=(${out_prefix1}.merged.fastq/*R12*.fastq)
 fi
 
-if [ "$is_paired_end" != true ] 
+if [ "$is_paired_end" != y ] 
 then
 	mkdir -p ${out_prefix1}.fastq
 	for i1 in "${fastq_files1[@]}"
@@ -84,7 +87,7 @@ then
 		then
 			echo ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name1
 		else
-			echo copy $name in ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
+			echo copy $name to ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
 			cp $i1 ${out_prefix1}.fastq/$name
 			echo Unzipping ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
 			gunzip ${out_prefix1}.fastq/$name
@@ -106,10 +109,6 @@ done
 config_file=${out_prefix1}.config
 
 #step 3: mapping on the ref genome using mapper module
-
-#out_path=$(dirname -- "$out_prefix")
-#out_name=$(basename -- "$out_prefix")
-#mkdir -p $out_path
 
 echo "Running mapper.pl..."
 
