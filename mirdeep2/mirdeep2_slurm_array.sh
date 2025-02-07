@@ -12,14 +12,13 @@
 #########################################################################################
 #########################################################################################
 
-out_dir=/lustre/projects/Research_Project-191391/Morteza/Ehsan/ROSMAP_miRNA/Results
-fastq_dir=/lustre/projects/Research_Project-191391/Morteza/Ehsan/ROSMAP_miRNA/Raw_trimmed
-genome_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hg38.fa
-bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
-hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.fa.fix
-mature_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/mature1.fa.fix
+out_dir=./Results
+fastq_dir=./Raw_trimmed
+genome_file=./hg38.fa
+bowtie_index_pref=./hg38.fa
+hairpin_file=./hairpin1.fa.fix
+mature_file=./mature1.fa.fix
 
-is_paired_end=n      #y/n
 out_prefix=ROSMAP
 
 #######################################################################################
