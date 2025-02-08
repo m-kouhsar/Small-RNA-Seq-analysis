@@ -18,7 +18,6 @@ genome_file=./hg38.fa
 bowtie_index_pref=./hg38.fa
 hairpin_file=./hairpin1.fa.fix
 mature_file=./mature1.fa.fix
-
 out_prefix=ROSMAP
 
 #######################################################################################
@@ -27,7 +26,13 @@ out_prefix1=${out_dir}/${out_prefix}.${SLURM_ARRAY_TASK_ID}
 fastq_files=(${fastq_dir}/*.fastq.gz)
 
 Num_samp=${#fastq_files[@]}
-window_size=$(( Num_samp / SLURM_ARRAY_TASK_COUNT + 1 ))
+
+if [ $(( Num_samp % SLURM_ARRAY_TASK_COUNT)) -eq 0 ]
+then
+	window_size=$(( Num_samp / SLURM_ARRAY_TASK_COUNT))
+else
+	window_size=$(( Num_samp / SLURM_ARRAY_TASK_COUNT + 1 ))
+fi
 
 lower=$(( SLURM_ARRAY_TASK_ID * window_size ))
 
@@ -47,54 +52,28 @@ echo Start array index: $SLURM_ARRAY_TASK_COUNT
 echo End array index : $SLURM_ARRAY_TASK_COUNT
 echo numer of arrays: $SLURM_ARRAY_TASK_COUNT
 echo current array index: $SLURM_ARRAY_TASK_ID
+echo Number of samples in current array: ${#fastq_files1[@]}
 
 echo "##########################################################################"
 echo -e '\n'
 
-if [ "$is_paired_end" = y ] 
-#step 1: merging paired end data
-then
-	mkdir -p ${out_prefix1}.merged.fastq
-	for i1 in "${fastq_files1[@]}"
-	do
-		i2=${i1/R1/R2}
-		name=$(basename $i1)
-		name=${name/R1/R12}
-		name1=${name%".gz"}
-		if [ -f ${out_prefix1}.merged.fastq/$name1 ]
-		then
-			echo ${out_prefix1}.merged.fastq/$name1
-		else
-			echo Merging $(basename $i1) and $(basename $i2) files and saving the result to ${out_prefix}.${SLURM_ARRAY_TASK_ID}.merged.fastq/$name
-			cat $i1 $i2  > ${out_prefix1}.merged.fastq/$name
-			echo Unzipping ${out_prefix}.${SLURM_ARRAY_TASK_ID}.merged.fastq/$name
-			gunzip ${out_prefix1}.merged.fastq/$name
-		fi
-		echo -e '\n'
-	done
-	fastq_files1=(${out_prefix1}.merged.fastq/*R12*.fastq)
-fi
-
-if [ "$is_paired_end" != y ] 
-then
-	mkdir -p ${out_prefix1}.fastq
-	for i1 in "${fastq_files1[@]}"
-	do
-		name=$(basename $i1)
-		name1=${name%".gz"}
-		if [ -f ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name1 ]
-		then
-			echo ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name1
-		else
-			echo copy $name to ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
-			cp $i1 ${out_prefix1}.fastq/$name
-			echo Unzipping ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
-			gunzip ${out_prefix1}.fastq/$name
-		fi
-		echo -e '\n'
-	done
-	fastq_files1=(${out_prefix1}.fastq/*.fastq)
-fi
+mkdir -p ${out_prefix1}.fastq
+for i1 in "${fastq_files1[@]}"
+do
+	name=$(basename $i1)
+	name1=${name%".gz"}
+	if [ -f ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name1 ]
+	then
+		echo ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name1
+	else
+		echo copy $name to ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
+		cp $i1 ${out_prefix1}.fastq/$name
+		echo Unzipping ${out_prefix}.${SLURM_ARRAY_TASK_ID}.fastq/$name
+		gunzip ${out_prefix1}.fastq/$name
+	fi
+	echo -e '\n'
+done
+fastq_files1=(${out_prefix1}.fastq/*.fastq)
 
 #step 2: generating config file
 echo Saving config file to ${out_prefix}.${SLURM_ARRAY_TASK_ID}.config
