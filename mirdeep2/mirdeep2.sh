@@ -50,17 +50,19 @@ echo Number of samples in current array: ${#fastq_files1[@]}
 
 echo "##########################################################################"
 echo -e '\n'
-
+mkdir -p $result_dir
+cd $result_dir
 #step 2: generating config file
 echo Saving config file to ${result_dir}/config.${SLURM_ARRAY_TASK_ID}.txt
 j=0
 for i in ${fastq_files1[@]}
 do
-	echo -e "${i}\t${j}" >> ${result_dir}/config.${SLURM_ARRAY_TASK_ID}.txt
+    j_code=$(printf "%03d\n" "$((j+1))")
+	echo -e "${i}\t${j_code}" >> config.${SLURM_ARRAY_TASK_ID}.txt
 	j=$(( j + 1 ))
 done
 
-config_file=${result_dir}/config.${SLURM_ARRAY_TASK_ID}.txt
+config_file=config.${SLURM_ARRAY_TASK_ID}.txt
 
 #step 3: mapping on the ref genome using mapper module
 
@@ -68,17 +70,17 @@ echo "Running mapper.pl..."
 
 mapper.pl ${config_file} \
        -d -e -h -i -j  -l 18 -m -p $bowtie_index_pref \
-       -s ${result_dir}/mapper.${SLURM_ARRAY_TASK_ID}.fa \
-       -t ${result_dir}/mapper.${SLURM_ARRAY_TASK_ID}.arf -v -o 16\
+       -s mapper.${SLURM_ARRAY_TASK_ID}.fa \
+       -t mapper.${SLURM_ARRAY_TASK_ID}.arf -v -o 16\
 
 #step 4: extracting miRNA count with miRdeep2 module
 
 echo "Running miRDeep2.pl..."
 
-miRDeep2.pl ${result_dir}/mapper.${SLURM_ARRAY_TASK_ID}.fa \
+miRDeep2.pl mapper.${SLURM_ARRAY_TASK_ID}.fa \
     ${genome_file} \
-    ${result_dir}/mapper.${SLURM_ARRAY_TASK_ID}.arf \
+    mapper.${SLURM_ARRAY_TASK_ID}.arf \
     ${mature_file} none ${hairpin_file} \
-    -t hsa 2>${result_dir}/mirdeep2.${SLURM_ARRAY_TASK_ID}.log \
+    -t hsa 2>mirdeep2.${SLURM_ARRAY_TASK_ID}.log \
 
 echo "all processes have been done!"
