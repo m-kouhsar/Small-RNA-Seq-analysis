@@ -12,11 +12,10 @@
 
 #########################################################################
 InputDir=/lustre/projects/Research_Project-191391/Project_11008/V0304/14.1_fastp_adapter_trimmed
-OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog
-Thread=15
+OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/R1
 
 #########################################################################
-Samples=(${InputDir}/*R1*)
+Samples=(${InputDir}/*R1*.gz)
 
 Num_samp=${#Samples[@]}
 
@@ -48,13 +47,9 @@ for name in ${Samples_1[@]}
 do
     j=$((j+1))
     R1=$name
-    R2=${name/R1/R2}
     name1=$( basename $R1)
-    name1=${name1/R1/R12}
-    echo "**********************************************************************************************************"
-    echo "                 Merging Sample $j: $name1"
-    echo "**********************************************************************************************************"
-    pear -f $R1 -r $R2 -o ${OutDir}/${name1}.Pear -j 15
+    name1=${name1/".gz"/""}
+    echo "Unzipping Sample $j: $name1"
+    gunzip -c $R1 > ${OutDir}/${name1}
+
 done
-
-
