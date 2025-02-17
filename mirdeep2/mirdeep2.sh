@@ -65,7 +65,7 @@ done
 config_file=config.${SLURM_ARRAY_TASK_ID}.txt
 
 #step 3: mapping on the ref genome using mapper module
-
+echo -e '\n'
 echo "Running mapper.pl..."
 
 mapper.pl ${config_file} \
@@ -74,7 +74,7 @@ mapper.pl ${config_file} \
        -t mapper.${SLURM_ARRAY_TASK_ID}.arf -v -o 16\
 
 #step 4: extracting miRNA count with miRdeep2 module
-
+echo -e '\n'
 echo "Running miRDeep2.pl..."
 
 miRDeep2.pl mapper.${SLURM_ARRAY_TASK_ID}.fa \
