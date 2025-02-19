@@ -12,7 +12,7 @@
 
 #########################################################################
 InputDir=/lustre/projects/Research_Project-191391/Project_11008/V0304/14.1_fastp_adapter_trimmed
-OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog
+OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/flash
 Thread=15
 
 #########################################################################
@@ -42,19 +42,25 @@ echo current array index: $SLURM_ARRAY_TASK_ID
 echo Number of samples in current array: ${#Samples_1[@]}
 
 ###########################################################################
-mkdir -p $OutDir
-j=0
-for name in ${Samples_1[@]}
-do
-    j=$((j+1))
-    R1=$name
-    R2=${name/R1/R2}
-    name1=$( basename $R1)
-    name1=${name1/R1/R12}
-    echo "**********************************************************************************************************"
-    echo "                 Merging Sample $j: $name1"
-    echo "**********************************************************************************************************"
-    pear -f $R1 -r $R2 -o ${OutDir}/${name1}.Pear -j 15
-done
+if [ ${#Samples_1[@]} != 0 ]
+then
+    mkdir -p $OutDir
+    cd $OutDir
+    j=0
+    for name in ${Samples_1[@]}
+    do
+        j=$((j+1))
+        R1=$name
+        R2=${name/R1/R2}
+        name1=$( basename $R1)
+        name1=${name1/R1/R12}
+        echo "**********************************************************************************************************"
+        echo "                 Merging Sample $j: $name1"
+        echo "**********************************************************************************************************"
+        flash $R1 $R2 -o ${name1}.flash -t $Thread
+    done
+else
+    echo "There is no samples in the current array!"
+fi
 
 
