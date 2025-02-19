@@ -14,6 +14,8 @@
 InputDir=/lustre/projects/Research_Project-191391/Project_11008/V0304/14.1_fastp_adapter_trimmed
 OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/flash
 Thread=15
+min_overlap=5
+max_overlap=100
 
 #########################################################################
 Samples=(${InputDir}/*R1*)
@@ -57,7 +59,7 @@ then
         echo "**********************************************************************************************************"
         echo "                 Merging Sample $j: $name1"
         echo "**********************************************************************************************************"
-        flash $R1 $R2 -o ${name1}.flash -t $Thread
+        flash -m $min_overlap -M $max_overlap $R1 $R2 -o ${name1}.flash -t $Thread 2>&1 | tee ${name1}.flash.log
     done
 else
     echo "There is no samples in the current array!"
