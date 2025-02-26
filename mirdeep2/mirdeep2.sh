@@ -19,7 +19,7 @@ hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.
 mature_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/mature1.fa.fix
 
 ### mapper.pl inputs
-skip_mapper=yes
+skip_mapper=no
 ### The following two arguments are mendatory if you set skip_mapper to "yes"
 mapper_fa=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.R1/mapper.16.fa
 mapper_arf=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.R1/mapper.16.arf
