@@ -11,11 +11,11 @@
 #SBATCH --array=0-19
 
 #########################################################################
-InputDir=/lustre/projects/Research_Project-191391/Project_11008/V0304/14.1_fastp_adapter_trimmed
-OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/flash
+InputDir=/lustre/projects/Research_Project-191391/Project_10396/11_fastp_trimmed
+OutDir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/flash.10396
 Thread=15
-min_overlap=5
-max_overlap=100
+min_overlap=10
+max_overlap=150
 
 #########################################################################
 Samples=(${InputDir}/*R1*)

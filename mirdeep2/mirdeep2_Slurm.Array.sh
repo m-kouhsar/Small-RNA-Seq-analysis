@@ -3,7 +3,7 @@
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -D . # set working directory to .
 #SBATCH -p mrcq
-#SBATCH --time=30:00:00 # Maximum wall time for the job
+#SBATCH --time=50:00:00 # Maximum wall time for the job
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors.
 #SBATCH --mail-type=END # send email at job completion
@@ -12,8 +12,8 @@
 #########################################################################################
 #########################################################################################
 
-result_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.PEAR
-fastq_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/PEAR.assembled
+result_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.FLASH
+fastq_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/flash
 genome_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hg38.fa
 bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
 hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.fa.fix
@@ -50,7 +50,7 @@ echo Number of samples in current array: ${#fastq_files1[@]}
 
 echo "##########################################################################"
 echo -e '\n'
-if [ ${#fastq_files1[@]} != 0]
+if [ ${#fastq_files1[@]} != 0 ]
 then
     mkdir -p $result_dir
     cd $result_dir
