@@ -24,7 +24,7 @@ cat("\n")
 message("Detecting expression files...")
 
 exprs.files = data.frame(ExprFile = list.files(path = mirdeep.results.dir , pattern = "^miRNAs_expressed_all_samples_.*[.]csv",
-                                               all.files = F,full.names = F, recursive = F,ignore.case = F))
+                                               all.files = F,full.names = F, recursive = T,ignore.case = F))
 if(nrow(exprs.files) == 0){
   stop("No expression file were detected. Check the results directory: ",mirdeep.results.dir)
 }else{
