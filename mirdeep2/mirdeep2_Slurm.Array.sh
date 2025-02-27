@@ -50,6 +50,7 @@ echo Number of samples in current array: ${#fastq_files1[@]}
 
 echo "##########################################################################"
 echo -e '\n'
+result_dir=${result_dir}/mirdeep2.results.${SLURM_ARRAY_TASK_ID}
 if [ ${#fastq_files1[@]} != 0 ]
 then
     mkdir -p $result_dir
