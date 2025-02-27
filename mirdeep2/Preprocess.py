@@ -2,7 +2,9 @@
 """
 Created on Mon Nov  8 09:20:34 2021
 
-@author: mk693
+@author: m.kouhsar@exeter.ac.uk
+
+Purifying hairpin and mature miRNAs fasta files by removing unwanten characters.
 """
 
 ######### input parameters ###################
@@ -10,6 +12,7 @@ CurWD='.'
 species='hsa'
 input_file='./mirbase_ref/mature1.fa'
 
+#############################################
 
 import os
 
