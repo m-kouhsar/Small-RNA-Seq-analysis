@@ -18,15 +18,17 @@ echo -e '\n'
 
 InputDir=./miRNASeq_trimmed
 OutDir=./exceRpt/results
-RefDir=./exceRpt/hg19
-is_paired_end=no #no or yes
+RefDir=./exceRpt/hg38
+Genome_Ver=hg38
+Threads=15
 
 ###################################################################################################
-mkdir -p $OutDir
 
 samples=($(ls ${InputDir}/*R1*.gz))
 Num_samp=${#samples[@]}
-window_size=$(( Num_samp / SLURM_ARRAY_TASK_COUNT + 1 ))
+
+denom_2=$(( SLURM_ARRAY_TASK_COUNT / 2 ))
+window_size=$(( ( Num_samp + denom_2 ) / SLURM_ARRAY_TASK_COUNT ))
 
 lower=$(( SLURM_ARRAY_TASK_ID * window_size ))
 
@@ -37,46 +39,35 @@ then
     samples_batch=(${samples[@]:$lower})
 fi
 
-#echo "number of samples $Num_samp"
-#echo "Window $window_size"
-#echo "lower $lower"
-#echo "$is_paired_end"
+echo Output directory: $OutDir
+echo Fastq files directory: $InputDir
+echo Reference genome file (downloaded from https://github.gersteinlab.org/exceRpt/): $RefDir
+echo Total Number of samples: $Num_samp
+echo Start array index: $SLURM_ARRAY_TASK_MIN
+echo End array index : $SLURM_ARRAY_TASK_MAX
+echo numer of arrays: $SLURM_ARRAY_TASK_COUNT
+echo current array index: $SLURM_ARRAY_TASK_ID
+echo Number of samples in current array: ${#samples_batch[@]}
 
-if [ "$is_paired_end" = "yes" ] 
-then
-	echo "Merging paired end data..."
-	echo -e '\n'
-	mkdir -p ${OutDir}/merged.fastq
-	for i1 in "${samples_batch[@]}"
-	do
-		i2=${i1/R1/R2}
-		name=$(basename $i1)
-		name=${name/R1/R12}
-		
-		if [ ! -f ${OutDir}/merged.fastq/$name ]
-		then
-			echo Merging $(basename $i1) and $(basename $i2) files and saving the result in ${OutDir}/merged.fastq/$name
-			cat $i1 $i2  > ${OutDir}/merged.fastq/$name
-		else
-			echo ${OutDir}/merged.fastq/$name is already exist
-		fi
-		echo -e '\n'
-	done
-	samples_batch=(${OutDir}/merged.fastq/*R12*.fastq)
-fi
+echo "##########################################################################"
+echo -e '\n'
+
+mkdir -p $OutDir
+
+j=0
 
 for i in ${samples_batch[@]}
 do
+	j=$(( j + 1 ))
 
     InputFileName=$(basename $i)
     
-    #echo $i
-    echo "Working on $InputFileName ..."
+    echo "*********************************************************************************"
+    echo "Working on sample $j: $InputFileName ..."
+	echo "*********************************************************************************"
 
-    udocker run -v ${InputDir}:/exceRptInput -v ${OutDir}:/exceRptOutput -v ${RefDir}:/exceRpt_DB/hg19 -t rkitchen/excerpt INPUT_FILE_PATH=/exceRptInput/${InputFileName} MAIN_ORGANISM_GENOME_ID=hg19 ADAPTER_SEQ=none N_THREADS=15 REMOVE_LARGE_INTERMEDIATE_FILES=true 
+    udocker run -v ${InputDir}:/exceRptInput -v ${OutDir}:/exceRptOutput -v ${RefDir}:/exceRpt_DB/${Genome_Ver} -t rkitchen/excerpt INPUT_FILE_PATH=/exceRptInput/${InputFileName} MAIN_ORGANISM_GENOME_ID=$Genome_Ver ADAPTER_SEQ=none N_THREADS=$Threads REMOVE_LARGE_INTERMEDIATE_FILES=true 
 
-    #rm ${OutDir}/${InputFileName%".gz"}/*.gz
-    #rm ${OutDir}/${InputFileName%".gz"}/*.bam
     echo -e '\n'
 done
 
