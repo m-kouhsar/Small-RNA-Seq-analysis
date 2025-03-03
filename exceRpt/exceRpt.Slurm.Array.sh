@@ -41,7 +41,7 @@ fi
 
 echo Output directory: $OutDir
 echo Fastq files directory: $InputDir
-echo Reference genome file (downloaded from https://github.gersteinlab.org/exceRpt/): $RefDir
+echo "Reference genome file (downloaded from https://github.gersteinlab.org/exceRpt/):" $RefDir
 echo Total Number of samples: $Num_samp
 echo Start array index: $SLURM_ARRAY_TASK_MIN
 echo End array index : $SLURM_ARRAY_TASK_MAX
