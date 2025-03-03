@@ -71,25 +71,25 @@ processSamplesInDir = function(data.dir, output.dir=data.dir, scriptDir="~/Dropb
 baseURL = "https://cran.r-project.org"
 if(!"plyr" %in% rownames(installed.packages())) { install.packages("plyr",repos=baseURL) }
 if(!"gplots" %in% rownames(installed.packages())) { install.packages("gplots",repos=baseURL) }
-if(!"marray" %in% rownames(installed.packages())) { source("http://bioconductor.org/biocLite.R"); biocLite("marray",ask=F) }
+if(!"marray" %in% rownames(installed.packages())) { BiocManager::install("marray",ask=F) }
 if(!"reshape2" %in% rownames(installed.packages())) { install.packages("reshape2",repos=baseURL) }
 if(!"ggplot2" %in% rownames(installed.packages())) { install.packages("ggplot2",repos=baseURL) }
 if(!"tools" %in% rownames(installed.packages())) { install.packages("tools",repos=baseURL) }
-if(!"Rgraphviz" %in% rownames(installed.packages())) { source("http://bioconductor.org/biocLite.R"); biocLite("Rgraphviz",ask=F) }
+if(!"Rgraphviz" %in% rownames(installed.packages())) { BiocManager::install("Rgraphviz",ask=F) }
 if(!"scales" %in% rownames(installed.packages())) { install.packages("scales",repos=baseURL) }
 
 ## update
-update.packages(repos=baseURL,ask=F)
+#update.packages(repos=baseURL,ask=F)
 
 ## load
-require(plyr)
-require(gplots)
-require(marray)
-require(reshape2)
-require(ggplot2)
-require(tools)
-require(Rgraphviz)
-require(scales)
+suppressMessages(require(plyr))
+suppressMessages(require(gplots))
+suppressMessages(require(marray))
+suppressMessages(require(reshape2))
+suppressMessages(require(ggplot2))
+suppressMessages(require(tools))
+suppressMessages(require(Rgraphviz))
+suppressMessages(require(scales))
 
 
 ##
