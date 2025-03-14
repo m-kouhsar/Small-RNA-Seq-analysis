@@ -13,19 +13,19 @@
 #########################################################################################
 
 ### miRDeep2.pl inputs
-result_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.R1
-genome_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hg38.fa
-hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.fa.fix
-mature_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/mature1.fa.fix
+result_dir=./mirdeep2.results
+genome_file=./hg38.fa
+hairpin_file=./hairpin1.fa.fix
+mature_file=./mature1.fa.fix
 
 ### mapper.pl inputs
 skip_mapper=no
 ### The following two arguments are mendatory if you set skip_mapper to "yes"
-mapper_fa=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.R1/mapper.16.fa
-mapper_arf=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.R1/mapper.16.arf
+mapper_fa=./mapper.fa
+mapper_arf=./mapper.arf
 ### The following three arguments are mendatory if you set skip_mapper to "no"
-fastq_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/R1
-bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
+fastq_dir=./trimmed_fastq_files
+bowtie_index_pref=./bowtie-index/hg38.fa
 
 
 #######################################################################################
