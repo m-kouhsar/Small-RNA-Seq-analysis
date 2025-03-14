@@ -8,7 +8,7 @@ OutPrefix <- args[2]           # This script Output files prefix
 if(is.na(OutPrefix)){
   OutPrefix = ""
 }else{
-  OutPrefix = paste0(OutPrefix , ".")
+  OutPrefix = paste0(OutPrefix , "_")
 }
 
 if(is.na(mirdeep.results.dir)){
