@@ -12,12 +12,12 @@
 #########################################################################################
 #########################################################################################
 
-result_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.FLASH
-fastq_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/flash
-genome_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hg38.fa
-bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
-hairpin_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/hairpin1.fa.fix
-mature_file=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/mature1.fa.fix
+result_dir=./mirdeep2.results
+fastq_dir=./trimmed_fastq_files
+genome_file=./hg38.fa
+bowtie_index_pref=./bowtie-index/hg38.fa
+hairpin_file=./hairpin1.fa.fix
+mature_file=./mature1.fa.fix
 
 #######################################################################################
 #######################################################################################
