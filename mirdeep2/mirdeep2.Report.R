@@ -4,7 +4,6 @@ args <- commandArgs(T)
 
 mirdeep.results.dir <- args[1] # The directory contains mirdeep2 results
 OutPrefix <- args[2]           # This script Output files prefix
-SampleID.trim <- args[3]       # The substring that you want to remove from the samples IDs in the count matrix (e.g. ".fastq")
 
 if(is.na(OutPrefix)){
   OutPrefix = ""
@@ -18,7 +17,6 @@ if(is.na(mirdeep.results.dir)){
 
 message("mirdeep2 results directory: ", mirdeep.results.dir)
 message("Count matrix files prefix: ", OutPrefix)
-message("The following substring will be removed from the sample IDs: ", SampleID.trim)
 cat("\n")
 
 message("Detecting expression files...")
@@ -60,10 +58,6 @@ for (i in 1:nrow(exprs.files)) {
   config[,1] <- basename(config[,1])
   index <- match(names(expr)[c(-1:-4)],config[,2])
   names(expr)[c(-1:-4)] <- config[index , 1]
-  
-  if(!is.na(SampleID.trim)){
-    names(expr) = str_remove(names(expr) , pattern = SampleID.trim)
-  }
   
   write.csv(expr , file = paste0(dirname(OutPrefix),"/",exprs.files$ConfigFile[i],".count.csv"),row.names = F)
   mirna.ids = expr[,c(1,3)]

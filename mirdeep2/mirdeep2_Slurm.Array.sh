@@ -55,7 +55,7 @@ if [ ${#fastq_files1[@]} != 0 ]
 then
     mkdir -p $result_dir
     cd $result_dir
-    #step 2: generating config file
+    #step 1: generating config file
     echo Saving config file to ${result_dir}/config.${SLURM_ARRAY_TASK_ID}.txt
     j=0
     for i in ${fastq_files1[@]}
@@ -67,7 +67,7 @@ then
 
     config_file=config.${SLURM_ARRAY_TASK_ID}.txt
 
-    #step 3: mapping on the ref genome using mapper module
+    #step 2: mapping on the ref genome using mapper module
     echo -e '\n'
     echo "Running mapper.pl..."
 
@@ -76,7 +76,7 @@ then
         -s mapper.${SLURM_ARRAY_TASK_ID}.fa \
         -t mapper.${SLURM_ARRAY_TASK_ID}.arf -v -o 16\
 
-    #step 4: extracting miRNA count with miRdeep2 module
+    #step 3: extracting miRNA count with miRdeep2 module
     echo -e '\n'
     echo "Running miRDeep2.pl..."
 

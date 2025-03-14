@@ -26,17 +26,27 @@ mapper_arf=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Projec
 ### The following three arguments are mendatory if you set skip_mapper to "no"
 fastq_dir=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/R1
 bowtie_index_pref=/lustre/projects/Research_Project-191391/Morteza/mirdeep2/bowtie-index/hg38.fa
-config_file=/lustre/projects/Research_Project-191391/Morteza/miRNA/Results/Project.11008.V0304.NorCog/mirdeep2.R1/config.16.txt
 
 
 #######################################################################################
 #######################################################################################
-
+fastq_files=(${fastq_dir}/*R1*.fastq)
 
 mkdir -p $result_dir
 cd $result_dir
+#step 1: generating config file
+echo Saving config file to ${result_dir}/config.txt
+j=0
+for i in ${fastq_files[@]}
+do
+    j_code=$(printf "%03d\n" "$((j+1))")
+    echo -e "${i}\t${j_code}" >> config.txt
+    j=$(( j + 1 ))
+done
 
-#step 1: mapping on the ref genome using mapper module
+config_file=config.txt
+
+#step 2: mapping on the ref genome using mapper module
 
 if [ $skip_mapper != "yes" ]
 then
@@ -51,7 +61,7 @@ then
     mapper_arf=mapper.arf
 fi
 
-#step 2: extracting miRNA count with miRdeep2 module
+#step 3: extracting miRNA count with miRdeep2 module
 echo -e '\n'
 echo "Running miRDeep2.pl..."
 
