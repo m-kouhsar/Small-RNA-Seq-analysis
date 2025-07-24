@@ -57,7 +57,7 @@ mkdir -p $result_dir
 if [ ${#fastq_files1[@]} != 0 ]
 then
     j=0
-    cd $mintmap_git_dir
+    
     for i in ${fastq_files1[@]}
     do
         sample_name=$(basename $i)
