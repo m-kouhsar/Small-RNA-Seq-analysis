@@ -14,7 +14,9 @@
 
 result_dir=./ShortStack.Results
 fastq_dir=./sRNA_Seq_trimmed
-genome_fasta="/lustre/projects/Research_Project-191391/Morteza/Small_nonCoding_RNAs/miRNA/mirdeep2/Ref/hg38.fa"
+genome_fasta="./Ref/hg38.fa"
+genome_annot="./gencode.v48.annotation.shortstack.txt"
+threads=16
 
 #######################################################################################
 #######################################################################################
@@ -29,7 +31,7 @@ do
     sample_name=$(basename $i)
     echo "working on sample $((j+1)): $sample_name"
     
-    ShortStack --genomefile $genome_fasta --readfile $i --outdir ${result_dir}/${sample_name%.fastq.gz}
+    ShortStack --genomefile $genome_fasta --readfile $i --outdir ${result_dir}/${sample_name%.fastq.gz} --locifile $genome_annot --bowtie_cores $threads
     
     j=$(( j + 1 ))
 done
