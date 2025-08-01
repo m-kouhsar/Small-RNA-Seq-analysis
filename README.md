@@ -6,3 +6,6 @@ Mapping small RNA sequencing short reads on the reference genome using the follo
 [exceRpt](https://github.com/gersteinlab/exceRpt)
 
 [MINTmap](https://github.com/TJU-CMC-Org/MINTmap)
+
+[ShortStack 3.8.5](https://github.com/MikeAxtell/ShortStack)
+
