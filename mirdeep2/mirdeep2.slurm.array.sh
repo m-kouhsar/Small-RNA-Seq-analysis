@@ -60,6 +60,12 @@ then
     j=0
     for i in ${fastq_files1[@]}
     do
+        if [[ $i == *.gz ]]
+        then
+            echo "unzipping $i ..."
+            gunzip $i
+            i="${i%.gz}"
+        fi
         j_code=$(printf "%03d\n" "$((j+1))")
         echo -e "${i}\t${j_code}" >> config.${SLURM_ARRAY_TASK_ID}.txt
         j=$(( j + 1 ))

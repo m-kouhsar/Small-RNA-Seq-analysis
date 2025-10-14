@@ -19,11 +19,6 @@ hairpin_file=./hairpin1.fa.fix
 mature_file=./mature1.fa.fix
 
 ### mapper.pl inputs
-skip_mapper=no
-### The following two arguments are mendatory if you set skip_mapper to "yes"
-mapper_fa=./mapper.fa
-mapper_arf=./mapper.arf
-### The following three arguments are mendatory if you set skip_mapper to "no"
 fastq_dir=./trimmed_fastq_files
 bowtie_index_pref=./bowtie-index/hg38.fa
 
@@ -39,6 +34,13 @@ echo Saving config file to ${result_dir}/config.txt
 j=0
 for i in ${fastq_files[@]}
 do
+    if [[ $i == *.gz ]]
+    then
+        echo "unzipping $i ..."
+        gunzip $i
+        i="${i%.gz}"
+    fi
+
     j_code=$(printf "%03d\n" "$((j+1))")
     echo -e "${i}\t${j_code}" >> config.txt
     j=$(( j + 1 ))
@@ -48,18 +50,15 @@ config_file=config.txt
 
 #step 2: mapping on the ref genome using mapper module
 
-if [ $skip_mapper != "yes" ]
-then
-    echo -e '\n'
-    echo "Running mapper.pl..."
-    mapper.pl ${config_file} \
-        -d -e -h -i -j  -l 18 -m -p $bowtie_index_pref \
-        -s mapper.fa \
-        -t mapper.arf -v -o 16\
-    
-    mapper_fa=mapper.fa
-    mapper_arf=mapper.arf
-fi
+echo -e '\n'
+echo "Running mapper.pl..."
+mapper.pl ${config_file} \
+    -d -e -h -i -j  -l 18 -m -p $bowtie_index_pref \
+    -s mapper.fa \
+    -t mapper.arf -v -o 16\
+
+mapper_fa=mapper.fa
+mapper_arf=mapper.arf
 
 #step 3: extracting miRNA count with miRdeep2 module
 echo -e '\n'
@@ -72,4 +71,3 @@ miRDeep2.pl $mapper_fa \
     -t hsa 2>mirdeep2.log \
 
 echo "all processes have been done!"
-
