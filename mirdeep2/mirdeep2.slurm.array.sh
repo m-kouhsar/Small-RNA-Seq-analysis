@@ -9,7 +9,7 @@
 #SBATCH --mail-type=END # send email at job completion
 #SBATCH --mail-user=m.kouhsar@exeter.ac.uk # email address
 #SBATCH --job-name=mirdeep2
-#SBATCH --output=mirdeep2.%j.out
+#SBATCH --output=mirdeep2.%A_%a.out
 #SBATCH --array=0-15
 #########################################################################################
 #########################################################################################
