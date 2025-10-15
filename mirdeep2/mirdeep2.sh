@@ -36,9 +36,12 @@ for i in ${fastq_files[@]}
 do
     if [[ $i == *.gz ]]
     then
-        echo "unzipping $i ..."
-        gunzip $i
-        i="${i%.gz}"
+        echo "unzipping $(basename $i) ..."
+        i1=${result_dir}/$(basename "$i")
+        i1="${i1%.gz}"
+        echo "Writing unzipped file to $(dirname $i1) ..."
+        gunzip -c $i > $i1
+        i=$i1
     fi
 
     j_code=$(printf "%03d\n" "$((j+1))")
