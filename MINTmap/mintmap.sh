@@ -24,7 +24,7 @@ MINTplatesPath=/lustre/projects/Research_Project-191391/Morteza/Small_nonCoding_
 
 #######################################################################################
 #######################################################################################
-fastq_files=(${fastq_dir}/*.fastq.gz)
+fastq_files=(${fastq_dir}/*R1*.fastq.gz)
 
 mkdir -p $result_dir
 
@@ -33,7 +33,9 @@ j=0
 for i in ${fastq_files[@]}
 do
     sample_name=$(basename $i)
-    echo "working on sample $((j+1)): $sample_name"
+    echo "*************************************************************************"
+    echo "               working on sample $((j+1)): $sample_name"
+    echo "*************************************************************************"
     
     MINTmap.pl -f $i -p ${result_dir}/${sample_name%.fastq.gz} -l $lookuptable -s $tRNAsequences -o $tRFtypes -a $genome_assembly -j $MINTplatesPath
     j=$(( j + 1 ))

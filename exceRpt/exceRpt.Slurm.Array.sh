@@ -10,6 +10,7 @@
 #SBATCH --ntasks-per-node=16 # specify number of processors.
 #SBATCH --mail-type=END # send email at job completion
 #SBATCH --mail-user=m.kouhsar@exeter.ac.uk # email address
+#SBATCH --output=exceRpt.%A_%a.out
 #SBATCH --array=0-9
 
 echo Job started on:
@@ -24,7 +25,7 @@ Threads=15
 
 ###################################################################################################
 
-samples=($(ls ${InputDir}/*R1*.gz))
+samples=($(ls ${InputDir}/*R1*.fastq.gz))
 Num_samp=${#samples[@]}
 
 denom_2=$(( SLURM_ARRAY_TASK_COUNT / 2 ))
@@ -58,13 +59,13 @@ j=0
 
 for i in ${samples_batch[@]}
 do
-	j=$(( j + 1 ))
+	  j=$(( j + 1 ))
 
     InputFileName=$(basename $i)
     
     echo "*********************************************************************************"
-    echo "Working on sample $j: $InputFileName ..."
-	echo "*********************************************************************************"
+    echo "                  Working on sample $j: $InputFileName ..."
+	  echo "*********************************************************************************"
 
     udocker run -v ${InputDir}:/exceRptInput -v ${OutDir}:/exceRptOutput -v ${RefDir}:/exceRpt_DB/${Genome_Ver} -t rkitchen/excerpt INPUT_FILE_PATH=/exceRptInput/${InputFileName} MAIN_ORGANISM_GENOME_ID=$Genome_Ver ADAPTER_SEQ=none N_THREADS=$Threads REMOVE_LARGE_INTERMEDIATE_FILES=true 
 
