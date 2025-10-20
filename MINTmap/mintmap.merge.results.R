@@ -1,5 +1,5 @@
 message("Loading requiered libraries...")
-library(dplyr)
+suppressMessages(library(dplyr))
 library(purrr)
 library(data.table)
 library(stringr)
@@ -46,7 +46,6 @@ message("Checking the mintmap results directory...")
 amb.files = data.frame(amb_file = list.files(path = mintmap.results.dir , pattern = "ambiguous-tRFs.expression.txt",full.names = F , recursive = T))
 message(nrow(amb.files) , " ambiguous tRFs expression files detected.")
 amb.files$sample = str_remove(amb.files$amb_file , pattern = "-MINTmap_.*-ambiguous-tRFs.expression.txt")
-amb.files = amb.files[,c(2,1)]
 
 exc.files = data.frame(exc_file = list.files(path = mintmap.results.dir , pattern = "exclusive-tRFs.expression.txt",full.names = F , recursive = T))
 message(nrow(exc.files) , " exclusive tRFs expression files detected.")
@@ -57,10 +56,10 @@ message(nrow(amb.meta.files) , " ambigouos meta files detected.")
 amb.meta.files$sample = str_remove(amb.meta.files$amb_meta_file , pattern = "-MINTmap_.*-ambiguous-tRFs.countsmeta.txt")
 
 exc.meta.files = data.frame(exc_meta_file = list.files(path = mintmap.results.dir , pattern = "exclusive-tRFs.countsmeta.txt",full.names = F , recursive = T))
-message(nrow(exc.meta.files) , " ambigouos meta files detected.")
+message(nrow(exc.meta.files) , " exclusive meta files detected.")
 exc.meta.files$sample = str_remove(exc.meta.files$exc_meta_file , pattern = "-MINTmap_.*-exclusive-tRFs.countsmeta.txt")
 
-all_files <-   purrr::reduce(list(amb.files , exc.files , amb.meta.files , exc.meta.files) , full_join , by="sample")
+all_files <-   Reduce(function(x,y){merge(x, y , by = "sample" , all = TRUE)},list(amb.files , exc.files , amb.meta.files , exc.meta.files) )
 
 amb.all <- amb.meta.all <- exc.all <- exc.meta.all <- setNames(
   vector("list", nrow(all_files)),
@@ -70,7 +69,7 @@ amb.all <- amb.meta.all <- exc.all <- exc.meta.all <- setNames(
 
 message("Reading the mintmap result files...")
 for (i in 1:nrow(all_files)) {
-  
+  #message("Read ",i,"/",nrow(all_files))
   if(!is.na(all_files$amb_file[i])){
     amb.all[[all_files$sample[i]]] = fread(paste0(mintmap.results.dir , "/",all_files$amb_file[i]) , data.table = F , stringsAsFactors = F)
   }
@@ -90,10 +89,15 @@ for (i in 1:nrow(all_files)) {
 }
 
 message("merging results...")
-amb.all <- Filter(Negate(is.na), amb.all)
-exc.all <- Filter(Negate(is.na), exc.all)
-amb.meta.all <- Filter(Negate(is.na), amb.meta.all)
-exc.meta.all <- Filter(Negate(is.na), exc.meta.all)
+amb.all <- amb.all[!is.na(amb.all)]
+exc.all <- exc.all[!is.na(exc.all)]
+amb.meta.all <- amb.meta.all[!is.na(amb.meta.all)]
+exc.meta.all <- exc.meta.all[!is.na(exc.meta.all)]
+
+amb.all <- Filter(function(df) nrow(df) > 0, amb.all)
+exc.all <- Filter(function(df) nrow(df) > 0, exc.all)
+amb.meta.all <- Filter(function(df) nrow(df) > 0, amb.meta.all)
+exc.meta.all <- Filter(function(df) nrow(df) > 0, exc.meta.all)
 
 amb_count_unnormalized = merge_dfs(dfs = amb.all , by = names(amb.all[[1]])[1:3] , keep = names(amb.all[[1]])[4])
 exc_count_unnormalized = merge_dfs(dfs = exc.all , by = names(exc.all[[1]])[1:3] , keep = names(exc.all[[1]])[4])
@@ -101,6 +105,7 @@ amb_meta = do.call(rbind.data.frame , amb.meta.all)
 exc_meta = do.call(rbind.data.frame , exc.meta.all)
 
 message("Writing merged counts...")
+write.csv(all_files , file = paste0(OutPrefix , ".mintmap.results.csv") , row.names = F)
 write.table(amb_count_unnormalized , file = paste0(OutPrefix , ".ambiguous.tRFs.count.txt") , col.names = T , row.names = F , quote = F , sep = "\t")
 write.table(exc_count_unnormalized , file = paste0(OutPrefix , ".exclusive.tRFs.count.txt") , col.names = T , row.names = F , quote = F , sep = "\t")
 write.csv(amb_meta , file = paste0(OutPrefix , ".ambiguous.tRFs.metadata.csv"))
