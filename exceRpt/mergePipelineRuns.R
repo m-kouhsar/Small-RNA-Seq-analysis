@@ -77,8 +77,8 @@ exprs.gencode <- as.data.frame(exprs.gencode) %>%
 exprs.gencode_list <- split(exprs.gencode, exprs.gencode$gene_type)
 dir.create(paste0(output.dir,"/gencodeRNAs"))
 for(i in 1: length(exprs.gencode_list)){
-  write.table(exprs.gencode_list[[i]] , file = paste0(names(output.dir,"/gencodeRNAs/",
-                                                            exprs.gencode_list)[i] , "_ReadCount.tsv"),
+  write.table(exprs.gencode_list[[i]] , file = paste0(output.dir,"/gencodeRNAs/",
+                                                            names(exprs.gencode_list)[i] , "_ReadCount.tsv"),
               row.names = F , col.names = T , quote = F , sep = "\t")
 }
 
@@ -91,13 +91,7 @@ exprs.gencode.rpm <- as.data.frame(exprs.gencode.rpm) %>%
 exprs.gencode.rpm_list <- split(exprs.gencode.rpm, exprs.gencode.rpm$gene_type)
 dir.create(paste0(output.dir,"/gencodeRNAs"))
 for(i in 1: length(exprs.gencode.rpm_list)){
-  write.table(exprs.gencode.rpm_list[[i]] , file = paste0(names(output.dir,"/gencodeRNAs/",
-                                                                exprs.gencode.rpm_list)[i] , "_ReadPerMillion.tsv"),
+  write.table(exprs.gencode.rpm_list[[i]] , file = paste0(output.dir,"/gencodeRNAs/",
+                                                                names(exprs.gencode.rpm_list)[i] , "_ReadPerMillion.tsv"),
               row.names = F , col.names = T , quote = F , sep = "\t")
 }
-
-
-
-
-
-
