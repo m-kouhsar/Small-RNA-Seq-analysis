@@ -59,7 +59,10 @@ if(length(args) == 0){
   print(paste("Sourcing",other.name,"from",script.basename))
   source(other.name)
   cat("\n")
-  
+
+  if(!dir.exists(output.dir)){
+    dir.create(output.dir , recursive = T)
+  }
   
   ##
   ## Process all samples under this directory
