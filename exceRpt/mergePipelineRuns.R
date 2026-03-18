@@ -71,7 +71,7 @@ if(length(args) == 0){
 }
 ################################################################################
 suppressMessages(library(tidyverse))
-load(paste0(output.dir,"exceRpt_smallRNAQuants_ReadCounts.RData"))
+load(paste0(output.dir,"/exceRpt_smallRNAQuants_ReadCounts.RData"))
 
 exprs.gencode <- as.data.frame(exprs.gencode) %>%
   rownames_to_column("rowname") %>%
@@ -85,7 +85,7 @@ for(i in 1: length(exprs.gencode_list)){
               row.names = F , col.names = T , quote = F , sep = "\t")
 }
 
-load(paste0(output.dir,"exceRpt_smallRNAQuants_ReadsPerMillion.RData"))
+load(paste0(output.dir,"/exceRpt_smallRNAQuants_ReadsPerMillion.RData"))
 
 exprs.gencode.rpm <- as.data.frame(exprs.gencode.rpm) %>%
   rownames_to_column("rowname") %>%
