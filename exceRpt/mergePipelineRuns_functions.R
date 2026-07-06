@@ -450,18 +450,29 @@ readData = function(samplePathList, output.dir){
       }
       
       if("readCounts_tRNA_sense.txt" %in% availableFiles){
-        tmp = read.table(paste(samplePathList[i],"readCounts_tRNA_sense.txt",sep="/"), header=T, sep="\t", comment.char="", stringsAsFactors=F,colClasses=c("character","numeric","numeric","numeric","numeric"), row.names=1)
-        tmp = cbind(tmp, ID=sapply(rownames(tmp), function(id){ unlist(strsplit(id,"-"))[2]  }))
-        tRNA_sense = ddply(tmp, "ID", function(mat){ c(as.numeric(mat[1,1:2]),sum(mat$multimapAdjustedReadCount),sum(mat$multimapAdjustedBarcodeCount)) })
-        colnames(tRNA_sense)[-1] = colnames(tmp)[1:4]
-        tRNA_sense = tRNA_sense[order(tRNA_sense$multimapAdjustedReadCount,decreasing=T), ]
+        tmp = read.table(paste(samplePathList[i],"readCounts_tRNA_sense.txt",sep="/"), 
+                         header=T, sep="\t", comment.char="", stringsAsFactors=F,
+                         colClasses=c("character","numeric","numeric","numeric","numeric"), row.names=1)
+        #tmp = cbind(tmp, ID=sapply(rownames(tmp), function(id){ unlist(strsplit(id,"-"))[2]  }))
+        #tRNA_sense = ddply(tmp, "ID", function(mat){ c(as.numeric(mat[1,1:2]),sum(mat$multimapAdjustedReadCount),sum(mat$multimapAdjustedBarcodeCount)) })
+        #colnames(tRNA_sense)[-1] = colnames(tmp)[1:4]
+        #tRNA_sense = tRNA_sense[order(tRNA_sense$multimapAdjustedReadCount,decreasing=T), ]
+        tRNA_sense = data.frame(ID=rownames(tmp), tmp, stringsAsFactors=FALSE)
+        rownames(tRNA_sense) = NULL
+        tRNA_sense = tRNA_sense[order(tRNA_sense$multimapAdjustedReadCount, decreasing=T), ]
       }
       if("readCounts_tRNA_antisense.txt" %in% availableFiles){
-        tmp = read.table(paste(samplePathList[i],"readCounts_tRNA_antisense.txt",sep="/"), header=T, sep="\t", comment.char="", stringsAsFactors=F,colClasses=c("character","numeric","numeric","numeric","numeric"), row.names=1)
-        tmp = cbind(tmp, ID=sapply(rownames(tmp), function(id){ unlist(strsplit(id,"-"))[2]  }))
-        tRNA_antisense = ddply(tmp, "ID", function(mat){ c(as.numeric(mat[1,1:2]),sum(mat$multimapAdjustedReadCount),sum(mat$multimapAdjustedBarcodeCount)) })
-        colnames(tRNA_antisense)[-1] = colnames(tmp)[1:4]
-        tRNA_antisense = tRNA_antisense[order(tRNA_antisense$multimapAdjustedReadCount,decreasing=T), ]
+        tmp = read.table(paste(samplePathList[i],"readCounts_tRNA_antisense.txt",sep="/"), 
+                         header=T, sep="\t", comment.char="", stringsAsFactors=F,
+                         colClasses=c("character","numeric","numeric","numeric","numeric"), row.names=1)
+        # tmp = cbind(tmp, ID=sapply(rownames(tmp), function(id){ unlist(strsplit(id,"-"))[2]  }))
+        # tRNA_antisense = ddply(tmp, "ID", function(mat){ c(as.numeric(mat[1,1:2]),sum(mat$multimapAdjustedReadCount),sum(mat$multimapAdjustedBarcodeCount)) })
+        # colnames(tRNA_antisense)[-1] = colnames(tmp)[1:4]
+        # tRNA_antisense = tRNA_antisense[order(tRNA_antisense$multimapAdjustedReadCount,decreasing=T), ]
+        
+        tRNA_antisense = data.frame(ID=rownames(tmp), tmp, stringsAsFactors=FALSE)
+        rownames(tRNA_antisense) = NULL # Clean up rownames
+        tRNA_antisense = tRNA_antisense[order(tRNA_antisense$multimapAdjustedReadCount, decreasing=T), ]
       }
       
       if("readCounts_piRNA_sense.txt" %in% availableFiles){
