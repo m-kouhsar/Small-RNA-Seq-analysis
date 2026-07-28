@@ -6,63 +6,10 @@
 ##                                                                                      ##
 ## Version 4.6.3 (2016-10-08)                                                           ##
 ##                                                                                      ##
+## Modified by Morteza Kouhsar (m.kouhsar@exeter.ac.uk) to remove some bugs.            ##
+## Now the process only needs to have core results .tgz files and it will also remove   ##
+## all temprory files created by extracting zip files to save the space                 ##
 ##########################################################################################
-
-
-##
-## Main function to read and plot exceRpt output in a given directory
-##
-processSamplesInDir = function(data.dir, output.dir=data.dir, scriptDir="~/Dropbox/Work/YALE/exRNA/exceRpt"){
-  
-  ##  Look for samples to merge
-  printMessage(c("Searching for valid exceRpt pipeline output in ",data.dir))
-  samplePathList = unique(SearchForSampleData(data.dir,""))
-  
-  ## get sample names and remove duplicates:
-  sampleIDs = sapply(samplePathList, function(path){ tmp=unlist(strsplit(path,"/")); tmp[length(tmp)] })
-  samplePathList = samplePathList[!duplicated(sampleIDs)]
-  
-  ## -- Kill script if we do not have any samples to process
-  NumberOfCompatibleSamples = length(samplePathList)
-  stopifnot(NumberOfCompatibleSamples > 0)
-  printMessage(c("Found ",NumberOfCompatibleSamples," valid samples"))
-  
-  ## reads, normalises, and saves individual sample results
-  sampleIDs = readData(samplePathList, output.dir)
-  
-  ## do we have sample groups?
-  sampleGroups = data.frame(sampleID=sampleIDs, sampleGroup=rep("noGroup",length(sampleIDs)),stringsAsFactors=F)
-  if("exceRpt_sampleGroupDefinitions.txt" %in% dir(output.dir)){
-    ## read new groups
-    groups.tmp = read.table(paste(output.dir,"/exceRpt_sampleGroupDefinitions.txt",sep=""), stringsAsFactors=F,header=T)
-    ## remove samples that are not present in this sample set
-    groups.tmp = groups.tmp[groups.tmp$sampleID %in% sampleGroups$sampleID, ]
-    ## apply new sample groups to these samples
-    sampleGroups[match(groups.tmp$sampleID, sampleGroups$sampleID), ]$sampleGroup = groups.tmp$sampleGroup
-    ## write the table back in case there are unassigned / new samples
-    write.table(sampleGroups, file=paste(output.dir,"/exceRpt_sampleGroupDefinitions.txt",sep=""), sep="\t",row.names=F,col.names=T,quote=F)
-  }else{
-    # if not, write a template
-    write.table(sampleGroups, file=paste(output.dir,"/exceRpt_sampleGroupDefinitions.txt",sep=""), sep="\t",row.names=F,col.names=T,quote=F)
-  }
-  ## if there's only one sample group, don't bother
-  if(length(unique(sampleGroups$sampleGroup))==1){
-    sampleGroups = NA
-  }
-
-  ## plot the data
-  #PlotData(sampleIDs, output.dir, taxonomyPath=paste(scriptDir,"/NCBI_Taxonomy.RData",sep=""), sampleGroups)
-  PlotData(sampleIDs, output.dir, sampleGroups)
-  
-  ## output warnings
-  w = warnings()
-  if(!is.null(w)){
-    printMessage("Warning messages:")
-    print(w)
-  }
-}
-
-
 
 ##
 ## check dependencies
@@ -91,63 +38,85 @@ suppressMessages(require(tools))
 suppressMessages(require(Rgraphviz))
 suppressMessages(require(scales))
 
-
 ##
-## Function to recursively search a given directory for pipeline output
+## Main function to read and plot exceRpt output in a given directory
 ##
-SearchForSampleData = function(base.dir, directory=""){
-  to.return = NULL
-  dir.use = paste(base.dir, directory, sep = "/")
-  subdirs = dir(dir.use)
-  if(length(subdirs) > 0){
-    i.stats = grep("\\.stats$", subdirs, perl=T)
-    i.zip = grep("\\.zip$", subdirs, perl=T)
-    i.tar = grep("\\.tgz$|\\.tar.gz$", subdirs, perl=T)
+processSamplesInDir = function(data.dir, output.dir){
+  
+  ## -- 1. Set up temporary directory and guarantee cleanup --
+  temp.dir = file.path(output.dir, "temp.tgzs")
+  dir.create(temp.dir, showWarnings = FALSE, recursive = TRUE)
+  
+  on.exit({
+    printMessage("Cleaning up: Removing temporary directory...")
+    unlink(temp.dir, recursive = TRUE)
+  })
+  
+  ## -- 2. Find and extract CORE_RESULTS tgz files --
+  printMessage(c("Searching for CORE_RESULTS archives in ", data.dir))
+  tgz_files = list.files(path = data.dir, pattern = "CORE_RESULTS.*\\.tgz$", recursive = TRUE, full.names = TRUE)
+  
+  if(length(tgz_files) == 0){
+    stop("No CORE_RESULTS tgz files found in the specified directory.")
+  }
+  
+  printMessage(c("  -> Found ", length(tgz_files), " core result archive(s). Extracting..."))
+  for(tgz in tgz_files){
+    subfolder_name = sub("\\.tgz$", "", basename(tgz))
+    exdir_path = file.path(temp.dir, subfolder_name)
+    dir.create(exdir_path, showWarnings = FALSE)
     
-    ## handle decompressed pipeline output
-    if(length(i.stats) > 0){
-      tmp = gsub("\\.stats$","",subdirs[i.stats])
-      to.return = c(to.return, paste(dir.use,tmp,sep="/"))
-    }
-    
-    ## handle zipped pipeline output
-    if(length(i.zip) > 0){
-      for(x in i.zip){
-        tmp.contents = unzip(paste(dir.use,subdirs[x],sep="/"), list=T)[,1]
-        if(length(grep("\\.stats$", tmp.contents, perl=T)) > 0){
-          try(unzip(paste(dir.use,subdirs[x],sep="/"), exdir=gsub("\\.zip","",file_path_as_absolute(paste(dir.use,subdirs[x],sep="/"))), overwrite=FALSE), silent=T)
-          to.return = c(to.return, paste(dir.use,gsub("\\.zip$","",subdirs[x]),sep="/",gsub("\\.stats$","",tmp.contents[grep("\\.stats$", tmp.contents)])))
-        }
-      }
-    }
-    
-    ## handle [tar] gzipped pipeline output
-    if(length(i.tar) > 0){
-      for(x in i.tar){
-        tmp.dir = paste(dir.use,subdirs[x],sep="/")
-        tmp.contents = untar(tmp.dir, list=T, tar="tar")
-        if(length(grep("\\.stats$", tmp.contents, perl=T)) > 0){
-          try(untar(tmp.dir, exdir=gsub("\\.tgz$|\\.tar.gz$","",file_path_as_absolute(tmp.dir)), tar="tar"), silent=T)
-          to.return = c(to.return, paste(dir.use, gsub("\\.tgz$|\\.tar.gz$","",subdirs[x]), gsub("\\.stats$","",tmp.contents[grep("\\.stats$", tmp.contents)]),sep="/"))
-        }
-      }
-    }
-    
-    ## handle unknown directories
-    i.known = c(i.stats,i.zip,i.tar)
-    if(length(i.known) == 0){		# there are no .stats, .zip, or .tgz/.tar.gz files in the directory!
-      i.unknown = 1:length(subdirs)
-    }else{
-      i.unknown = (1:length(subdirs))[-i.known]
-    }
-    
-    if(length(i.unknown) > 0){
-      for(x in subdirs[i.unknown]){
-        to.return = c(to.return, SearchForSampleData(dir.use, x))
-      }
-    }
-    
-    return(unique(to.return))
+    tryCatch({
+      untar(tgz, exdir = exdir_path, tar = "tar")
+    }, error = function(e) warning(paste("Failed to extract", tgz)))
+  }
+  
+  ## -- 3. Look for samples to merge within the extracted temp directory --
+  printMessage("Validating complete samples based on .stats files...")
+  samplePathList = unique(SearchForSampleData(temp.dir))
+  
+  ## get sample names and remove duplicates:
+  sampleIDs = sapply(samplePathList, function(path){ tmp=unlist(strsplit(path,"/")); tmp[length(tmp)] })
+  samplePathList = samplePathList[!duplicated(sampleIDs)]
+  
+  ## -- Kill script if we do not have any samples to process
+  NumberOfCompatibleSamples = length(samplePathList)
+  stopifnot(NumberOfCompatibleSamples > 0)
+  
+  #printMessage(c("  -> Successfully validated ", NumberOfCompatibleSamples, " complete sample(s)."))
+  
+  if(NumberOfCompatibleSamples < length(tgz_files)) {
+    failed_count = length(tgz_files) - NumberOfCompatibleSamples
+    printMessage(c("  -> WARNING: ", failed_count, " archive(s) were missing valid .stats files and will be skipped."))
+  }
+  
+  ## reads, normalises, and saves individual sample results
+  printMessage("Processing and normalizing sample data...")
+  sampleIDs = readData(samplePathList, output.dir)
+  
+  ## do we have sample groups?
+  sampleGroups = data.frame(sampleID=sampleIDs, sampleGroup=rep("noGroup",length(sampleIDs)),stringsAsFactors=F)
+  if("exceRpt_sampleGroupDefinitions.txt" %in% dir(output.dir)){
+    groups.tmp = read.table(file.path(output.dir, "exceRpt_sampleGroupDefinitions.txt"), stringsAsFactors=F,header=T)
+    groups.tmp = groups.tmp[groups.tmp$sampleID %in% sampleGroups$sampleID, ]
+    sampleGroups[match(groups.tmp$sampleID, sampleGroups$sampleID), ]$sampleGroup = groups.tmp$sampleGroup
+    write.table(sampleGroups, file=file.path(output.dir, "exceRpt_sampleGroupDefinitions.txt"), sep="\t",row.names=F,col.names=T,quote=F)
+  }else{
+    write.table(sampleGroups, file=file.path(output.dir, "exceRpt_sampleGroupDefinitions.txt"), sep="\t",row.names=F,col.names=T,quote=F)
+  }
+  
+  if(length(unique(sampleGroups$sampleGroup))==1){
+    sampleGroups = NA
+  }
+  
+  ## plot the data
+  PlotData(sampleIDs, output.dir, sampleGroups)
+  
+  ## output warnings
+  w = warnings()
+  if(!is.null(w)){
+    printMessage("Warning messages:")
+    print(w)
   }
 }
 
@@ -161,165 +130,21 @@ printMessage = function(message=""){
 
 
 ##
-## Plots a taxonomy tree with a given set of weights
+## Function to recursively search the extracted temporary directory for pipeline output
 ##
-plotTree = function(rEG, taxonomyInfo, counts_uniq, counts_cum, title="", what){
+SearchForSampleData = function(base.dir){
+  # Find all .stats files with their full absolute/relative paths
+  stats_files = list.files(path = base.dir, pattern = "\\.stats$", recursive = TRUE, full.names = TRUE)
   
-  ## node parameters
-  nNodes = length(nodes(rEG))
-  nA <- list()
-  nA$shape = rep("circle",nNodes)
-  nA$fixedSize<-rep(FALSE, nNodes)
-  nA$height <- nA$width <- rescale(sqrt(counts_cum/10), to=c(0.25,7))
-  nA$color <- rep(rgb(0,0,0,0.25),nNodes)
-  nA$style <- rep("bold", nNodes)
-  if(what == "exogenousRibosomal"){
-    nA$fillcolor <- sapply(counts_uniq*10, function(val){ if(val>100){val=100}; rgb(100-val,100,100-val,maxColorValue=100)})
-  }else{
-    nA$fillcolor <- sapply(counts_uniq*10, function(val){ if(val>100){val=100}; rgb(100-val,100-val,100,maxColorValue=100)})
+  if(length(stats_files) > 0){
+    # Remove the '.stats' extension from the end of the strings
+    # This leaves the full path + sample prefix required by readData()
+    return(unique(sub("\\.stats$", "", stats_files)))
+  } else {
+    return(NULL)
   }
-  
-  newNodeIDs = sapply(taxonomyInfo[match(as.numeric(nodes(rEG)), taxonomyInfo$ID), ]$name, function(id){ newID=unlist(strsplit(id," ")); if(length(newID) == 1){id}else{paste(newID[1], "\n", paste(newID[-1],collapse=" "), sep="") }})
-  nA$label <- paste(newNodeIDs,"\n",round(counts_cum*10)/10,"%",sep="")
-  nA <- lapply(nA, function(x) { names(x) <- nodes(rEG); x})
-  
-  ## edge parameters
-  eA <- list(arrowsize=rep(0.1,length(names(rEG@edgeData))), arrowhead=rep("none",length(names(rEG@edgeData))))
-  eA <- lapply(eA, function(x) { names(x) <- names(rEG@edgeData); x})
-  
-  ## layout the graph
-  tmp = layoutGraph(rEG, nodeAttrs=nA, edgeAttrs=eA)
-  
-  ## hack to make sure the node labels are visible!
-  sizes = rescale(tmp@renderInfo@nodes$rWidth, to=c(0.2,1.5))
-  names(sizes) = nodes(rEG)
-  nodeRenderInfo(tmp) <- list(cex=sizes)
-  
-  graphRenderInfo(tmp) <- list(main=title)
-  
-  ## plot the graph
-  renderGraph(tmp)
 }
 
-
-# 
-# ##
-# ##
-# ##
-# getIntermediateNodeIDs = function(nodeID, edges, intermediates){
-#   parentID = edges[edges$tax_id == nodeID, ]$parent_tax_id
-#   if(nodeID == parentID){
-#     # this is root, add it just in case
-#     intermediates = c(intermediates, parentID)
-#   }
-#     
-#   if(parentID %in% intermediates  |  nodeID == parentID){
-#     return(intermediates)
-#   }else{
-#     return(getIntermediateNodeIDs(parentID, edges, c(intermediates, parentID)))
-#   }  
-# }
-
-
-##
-## Plot exogenous genomes
-##
-plotExogenousTaxonomyTrees = function(counts, cumcounts, what, output.dir, taxonomyInfo, fontScale=2, sampleGroups=NA, minPercent=0.5){
-  
-  
-  # counts = exprs.exogenousGenomes_specific
-  # cumcounts = exprs.exogenousGenomes_cumulative
-  # taxonomyInfo = taxonomyInfo.exogenous_genomes
-  # 
-  # counts = exprs.exogenousRibosomal_specific
-  # cumcounts = exprs.exogenousRibosomal_cumulative
-  # taxonomyInfo = taxonomyInfo.exogenous_rRNA
- 
-  ## add direct count to the cumulative counts matrix
-  cumcounts = cumcounts+counts
-  
-  #counts.norm = t(t(counts*100)/colSums(counts))
-  counts.norm = apply(counts, 2, function(col){ col*100/sum(col) })
-  cumcounts.norm = apply(cumcounts, 2, function(col){ col*100/col[1] })
-  dim(counts)
-  
-  ## remove nodes with < 0.1% of all reads
-  #minPercent = 1
-  keepRows = which(apply(counts.norm, 1, max) >= minPercent)
-  keepRows = sort(unique(c(keepRows, which(apply(cumcounts.norm, 1, max) >= minPercent))))
-  
-  # use only paths through the tree that capture above a certain fraction of reads
-  counts = counts[keepRows, , drop=F]
-  cumcounts = cumcounts[keepRows, , drop=F]
-  nrow(counts)
-  #data_uniq = counts.norm[keepRows, , drop=F]
-  #data_cum = cumcounts.norm[keepRows, , drop=F]
-  #nrow(data_cum)
-  
-  ## Re-scale the node percentages after trimming branches to make the numbers make more sense - shouldn't make much diff to the cumcounts
-  data_uniq = apply(counts, 2, function(col){ col*100/sum(col) })
-  data_cum = apply(cumcounts, 2, function(col){ col*100/col[1] })
-  
-  #if("significantDEX" %in% names(combinedSamples)){
-  #  significant = combinedSamples$significantDEX[keepRows]
-  #  foldChange = combinedSamples$foldChange[keepRows]
-  #}
-  
-  ## remove edges with no useable counts (based on minPercent threshold)
-  taxonomyInfo = taxonomyInfo[taxonomyInfo$ID %in% rownames(data_cum), ]
-  
-  ## Build the graph object
-  rEG <<- new("graphNEL", nodes=as.character(taxonomyInfo$ID), edgemode="directed")
-  trim <- function (x) gsub("^\\s+|\\s+$", "", x)
-  apply(taxonomyInfo[-1,], 1, function(row){ 
-    from = trim(as.character(row[4]));
-    if(from %in% taxonomyInfo$ID){ rEG <<- addEdge(trim(as.character(row[4])), trim(as.character(row[3])), rEG, 1) }
-    NULL })
-  
-  
-  data_uniq = data_uniq[match(taxonomyInfo$ID, rownames(data_uniq)), , drop=F]
-  data_cum = data_cum[match(taxonomyInfo$ID, rownames(data_cum)), , drop=F]
-  data_uniq[is.na(data_uniq)] = 0
-  data_cum[is.na(data_cum)] = 0
-  
-  
-  ##
-  ## Write to PDF
-  ##
-  ## plot an average tree over all samples
-  printMessage(c("Plotting a taxonomy tree based on the average of all samples "))
-  pdf(file=paste(output.dir,"/exceRpt_",what,"_TaxonomyTrees_aggregateSamples.pdf",sep=""),height=7,width=15)
-  plotTree(rEG, taxonomyInfo, apply(data_uniq, 1, max), rowMeans(data_cum), what=what)
-  dev.off()
-  
-  ## plot samples individually
-  printMessage(c("Plotting a separate taxonomy tree for each sample"))
-  pdf(file=paste(output.dir,"/exceRpt_",what,"_TaxonomyTrees_perSample.pdf",sep=""), height=7, width=15)
-  for(i in 1:ncol(data_uniq))
-    plotTree(rEG, taxonomyInfo, data_uniq[,i], data_cum[,i], title=paste(colnames(data_uniq)[i]," (total reads: ",cumcounts[1,i],")", sep=""), what=what)
-  dev.off()
-  
-  ## if there are groups of samples
-  if(is.data.frame(sampleGroups)){
-    printMessage(c("Plotting a separate taxonomy tree for each sample-group"))
-    pdf(file=paste(output.dir,"/exceRpt_",what,"_TaxonomyTrees_perGroup.pdf",sep=""), height=7, width=15)
-    for(thisgroup in levels(as.factor(sampleGroups$sampleGroup))){
-      tmpDat_uniq = rowMeans(data_uniq[, match(sampleGroups[sampleGroups$sampleGroup %in% thisgroup, ]$sampleID, colnames(data_uniq)), drop=F])
-      tmpDat_cum = rowMeans(data_cum[, match(sampleGroups[sampleGroups$sampleGroup %in% thisgroup, ]$sampleID, colnames(data_cum)), drop=F])
-      plotTree(rEG, taxonomyInfo, tmpDat_uniq, tmpDat_cum, title=paste(thisgroup,sep=""), what=what)
-    }
-    dev.off()
-  }
-  
-}
-
-
-
-
-
-##
-##
-##
 readData = function(samplePathList, output.dir){
   
   ##
@@ -653,7 +478,7 @@ readData = function(samplePathList, output.dir){
     tmp.nrow = nrow(taxonomyInfo.exogenous_genomes)
   exprs.exogenousGenomes_specific = matrix(0,ncol=length(sample.data),nrow=tmp.nrow, dimnames=list(taxonomyInfo.exogenous_genomes$ID, names(sample.data)))
   exprs.exogenousGenomes_cumulative = matrix(0,ncol=length(sample.data),nrow=tmp.nrow, dimnames=list(taxonomyInfo.exogenous_genomes$ID, names(sample.data)))
-
+  
   for(i in 1:length(sample.data)){
     run.duration[i,] = sample.data[[i]]$runTiming[1,4,drop=F]
     
@@ -827,10 +652,131 @@ readData = function(samplePathList, output.dir){
   return(rownames(mapping.stats))
 }
 
+##
+## Plots a taxonomy tree with a given set of weights
+##
+plotTree = function(rEG, taxonomyInfo, counts_uniq, counts_cum, title="", what){
+  
+  ## node parameters
+  nNodes = length(nodes(rEG))
+  nA <- list()
+  nA$shape = rep("circle",nNodes)
+  nA$fixedSize<-rep(FALSE, nNodes)
+  nA$height <- nA$width <- rescale(sqrt(counts_cum/10), to=c(0.25,7))
+  nA$color <- rep(rgb(0,0,0,0.25),nNodes)
+  nA$style <- rep("bold", nNodes)
+  if(what == "exogenousRibosomal"){
+    nA$fillcolor <- sapply(counts_uniq*10, function(val){ if(val>100){val=100}; rgb(100-val,100,100-val,maxColorValue=100)})
+  }else{
+    nA$fillcolor <- sapply(counts_uniq*10, function(val){ if(val>100){val=100}; rgb(100-val,100-val,100,maxColorValue=100)})
+  }
+  
+  newNodeIDs = sapply(taxonomyInfo[match(as.numeric(nodes(rEG)), taxonomyInfo$ID), ]$name, function(id){ newID=unlist(strsplit(id," ")); if(length(newID) == 1){id}else{paste(newID[1], "\n", paste(newID[-1],collapse=" "), sep="") }})
+  nA$label <- paste(newNodeIDs,"\n",round(counts_cum*10)/10,"%",sep="")
+  nA <- lapply(nA, function(x) { names(x) <- nodes(rEG); x})
+  
+  ## edge parameters
+  eA <- list(arrowsize=rep(0.1,length(names(rEG@edgeData))), arrowhead=rep("none",length(names(rEG@edgeData))))
+  eA <- lapply(eA, function(x) { names(x) <- names(rEG@edgeData); x})
+  
+  ## layout the graph
+  tmp = layoutGraph(rEG, nodeAttrs=nA, edgeAttrs=eA)
+  
+  ## hack to make sure the node labels are visible!
+  sizes = rescale(tmp@renderInfo@nodes$rWidth, to=c(0.2,1.5))
+  names(sizes) = nodes(rEG)
+  nodeRenderInfo(tmp) <- list(cex=sizes)
+  
+  graphRenderInfo(tmp) <- list(main=title)
+  
+  ## plot the graph
+  renderGraph(tmp)
+}
 
 
-
-
+##
+## Plot exogenous genomes
+##
+plotExogenousTaxonomyTrees = function(counts, cumcounts, what, output.dir, taxonomyInfo, fontScale=2, sampleGroups=NA, minPercent=0.5){
+  
+  
+  ## add direct count to the cumulative counts matrix
+  cumcounts = cumcounts+counts
+  
+  #counts.norm = t(t(counts*100)/colSums(counts))
+  counts.norm = apply(counts, 2, function(col){ col*100/sum(col) })
+  cumcounts.norm = apply(cumcounts, 2, function(col){ col*100/col[1] })
+  dim(counts)
+  
+  ## remove nodes with < 0.1% of all reads
+  #minPercent = 1
+  keepRows = which(apply(counts.norm, 1, max) >= minPercent)
+  keepRows = sort(unique(c(keepRows, which(apply(cumcounts.norm, 1, max) >= minPercent))))
+  
+  # use only paths through the tree that capture above a certain fraction of reads
+  counts = counts[keepRows, , drop=F]
+  cumcounts = cumcounts[keepRows, , drop=F]
+  nrow(counts)
+  #data_uniq = counts.norm[keepRows, , drop=F]
+  #data_cum = cumcounts.norm[keepRows, , drop=F]
+  #nrow(data_cum)
+  
+  ## Re-scale the node percentages after trimming branches to make the numbers make more sense - shouldn't make much diff to the cumcounts
+  data_uniq = apply(counts, 2, function(col){ col*100/sum(col) })
+  data_cum = apply(cumcounts, 2, function(col){ col*100/col[1] })
+  
+  #if("significantDEX" %in% names(combinedSamples)){
+  #  significant = combinedSamples$significantDEX[keepRows]
+  #  foldChange = combinedSamples$foldChange[keepRows]
+  #}
+  
+  ## remove edges with no useable counts (based on minPercent threshold)
+  taxonomyInfo = taxonomyInfo[taxonomyInfo$ID %in% rownames(data_cum), ]
+  
+  ## Build the graph object
+  rEG <<- new("graphNEL", nodes=as.character(taxonomyInfo$ID), edgemode="directed")
+  trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+  apply(taxonomyInfo[-1,], 1, function(row){ 
+    from = trim(as.character(row[4]));
+    if(from %in% taxonomyInfo$ID){ rEG <<- addEdge(trim(as.character(row[4])), trim(as.character(row[3])), rEG, 1) }
+    NULL })
+  
+  
+  data_uniq = data_uniq[match(taxonomyInfo$ID, rownames(data_uniq)), , drop=F]
+  data_cum = data_cum[match(taxonomyInfo$ID, rownames(data_cum)), , drop=F]
+  data_uniq[is.na(data_uniq)] = 0
+  data_cum[is.na(data_cum)] = 0
+  
+  
+  ##
+  ## Write to PDF
+  ##
+  ## plot an average tree over all samples
+  printMessage(c("Plotting a taxonomy tree based on the average of all samples "))
+  pdf(file=paste(output.dir,"/exceRpt_",what,"_TaxonomyTrees_aggregateSamples.pdf",sep=""),height=7,width=15)
+  plotTree(rEG, taxonomyInfo, apply(data_uniq, 1, max), rowMeans(data_cum), what=what)
+  dev.off()
+  
+  ## plot samples individually
+  printMessage(c("Plotting a separate taxonomy tree for each sample"))
+  pdf(file=paste(output.dir,"/exceRpt_",what,"_TaxonomyTrees_perSample.pdf",sep=""), height=7, width=15)
+  for(i in 1:ncol(data_uniq))
+    plotTree(rEG, taxonomyInfo, data_uniq[,i], data_cum[,i], title=paste(colnames(data_uniq)[i]," (total reads: ",cumcounts[1,i],")", sep=""), what=what)
+  dev.off()
+  
+  ## if there are groups of samples
+  if(is.data.frame(sampleGroups)){
+    printMessage(c("Plotting a separate taxonomy tree for each sample-group"))
+    pdf(file=paste(output.dir,"/exceRpt_",what,"_TaxonomyTrees_perGroup.pdf",sep=""), height=7, width=15)
+    for(thisgroup in levels(as.factor(sampleGroups$sampleGroup))){
+      tmpDat_uniq = rowMeans(data_uniq[, match(sampleGroups[sampleGroups$sampleGroup %in% thisgroup, ]$sampleID, colnames(data_uniq)), drop=F])
+      tmpDat_cum = rowMeans(data_cum[, match(sampleGroups[sampleGroups$sampleGroup %in% thisgroup, ]$sampleID, colnames(data_cum)), drop=F])
+      plotTree(rEG, taxonomyInfo, tmpDat_uniq, tmpDat_cum, title=paste(thisgroup,sep=""), what=what)
+    }
+    dev.off()
+  }
+  
+}
 
 
 ##

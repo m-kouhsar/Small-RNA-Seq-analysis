@@ -20,6 +20,7 @@
 ##   scales
 ##   stringr
 ##   tidyverse
+##   funr
 
 ##
 ## Check inputs
@@ -36,29 +37,24 @@ if(length(args) == 0){
   data.dir = args[1]
   if(length(args) >= 2){
     output.dir = args[2]
-    if(length(args) == 3){
-      classifier.path = args[3]
-    }
   }else{
-    output.dir = data.dir
+    output.dir = paste0(data.dir , "/exceRpt_merged")
   }
-  
   
   ##
   ## Find the relative path to the script containing the required functions
   ##
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.basename <- dirname(script.name)
-  if(length(script.basename) > 0){
-	  other.name <- paste(sep="/", script.basename, "mergePipelineRuns_functions.R")
-  }else{
-	  other.name = "mergePipelineRuns_functions.R"
+  if (!requireNamespace("funr", quietly = TRUE)) {
+    install.packages("funr")
   }
-  print(paste("Sourcing",other.name,"from",script.basename))
-  source(other.name)
-  cat("\n")
+  # Get the directory of the current script
+  script_dir <- dirname(funr::sys.script())
+  functions_file <- file.path(script_dir, "mergePipelineRuns_functions.R")
+  
+  # Output status and source the file
+  message(sprintf("Sourcing '%s' from '%s'", basename(functions_file), script_dir))
+  source(functions_file)
+  
 
   if(!dir.exists(output.dir)){
     dir.create(output.dir , recursive = T)
@@ -67,7 +63,7 @@ if(length(args) == 0){
   ##
   ## Process all samples under this directory
   ##
-  processSamplesInDir(data.dir, output.dir, scriptDir=script.basename)
+  processSamplesInDir(data.dir, output.dir)
 }
 ################################################################################
 suppressMessages(library(tidyverse))
@@ -92,7 +88,6 @@ exprs.gencode.rpm <- as.data.frame(exprs.gencode.rpm) %>%
   separate(rowname, into = c("gene_id", "gene_type"), sep = ":")
 
 exprs.gencode.rpm_list <- split(exprs.gencode.rpm, exprs.gencode.rpm$gene_type)
-dir.create(paste0(output.dir,"/gencodeRNAs"))
 for(i in 1: length(exprs.gencode.rpm_list)){
   write.table(exprs.gencode.rpm_list[[i]] , file = paste0(output.dir,"/gencodeRNAs/",
                                                                 names(exprs.gencode.rpm_list)[i] , "_ReadPerMillion.tsv"),
