@@ -10,7 +10,7 @@
 ## Now the process only needs to have core results .tgz files and it will also remove   ##
 ## all temprory files created by extracting zip files to save the space                 ##
 ##########################################################################################
-
+options(warn = 1)
 ##
 ## check dependencies
 ##

@@ -25,6 +25,9 @@
 ##
 ## Check inputs
 ##
+
+options(warn = 1)
+
 args<-commandArgs(TRUE)
 if(length(args) == 0){
   
@@ -93,3 +96,4 @@ for(i in 1: length(exprs.gencode.rpm_list)){
                                                                 names(exprs.gencode.rpm_list)[i] , "_ReadPerMillion.tsv"),
               row.names = F , col.names = T , quote = F , sep = "\t")
 }
+
